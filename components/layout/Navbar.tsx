@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import AuthButtons from "@/components/auth/AuthButtons";
 const navLinks = [
   { label: "Explore", href: "/" },
   { label: "Communities", href: "/communities" },
@@ -35,12 +35,7 @@ export default function Navbar() {
           ))}
         </div>
 
-        <Link
-          href="/login"
-          className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-500"
-        >
-          Sign In
-        </Link>
+        <AuthButtons />
       </nav>
     </header>
   );
