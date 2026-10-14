@@ -1,8 +1,12 @@
+import { auth } from "@/auth";
 import { connectDB } from "@/lib/mongodb";
 import Community from "@/models/Community";
+import Membership from "@/models/Membership";
+import User from "@/models/User";
+import MembershipButton from "@/components/communities/MembershipButton";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Membership from "@/models/Membership";
+
 type Props = {
   params: Promise<{
     slug: string;
@@ -11,14 +15,38 @@ type Props = {
 
 export default async function CommunityDetailPage({ params }: Props) {
   const { slug } = await params;
+
+  const session = await auth();
+
   await connectDB();
+
   const community = await Community.findOne({ slug }).lean();
+
   if (!community) {
     notFound();
   }
+
   const membersCount = await Membership.countDocuments({
     community: community._id,
   });
+
+  let isMember = false;
+
+  if (session?.user?.email) {
+    const user = await User.findOne({
+      email: session.user.email.toLowerCase(),
+    });
+
+    if (user) {
+      const membership = await Membership.exists({
+        user: user._id,
+        community: community._id,
+      });
+
+      isMember = Boolean(membership);
+    }
+  }
+
   return (
     <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
       <Link
@@ -27,8 +55,11 @@ export default async function CommunityDetailPage({ params }: Props) {
       >
         &larr; Back to Communities
       </Link>
+
       <h1 className="mt-8 text-3xl font-bold">{community.name}</h1>
+
       <p className="mt-4 text-lg text-slate-400">{community.description}</p>
+
       <ul className="mt-6 flex flex-wrap gap-2">
         {community.topics.map((topic) => (
           <li
@@ -43,6 +74,12 @@ export default async function CommunityDetailPage({ params }: Props) {
       <p className="mt-6 text-sm text-slate-400">
         {membersCount} member{membersCount !== 1 ? "s" : ""}
       </p>
+
+      <MembershipButton
+        slug={slug}
+        initialIsMember={isMember}
+        isLoggedIn={Boolean(session?.user)}
+      />
     </section>
   );
 }
