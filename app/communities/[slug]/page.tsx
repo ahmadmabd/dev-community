@@ -6,7 +6,9 @@ import User from "@/models/User";
 import MembershipButton from "@/components/communities/MembershipButton";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-
+import Post from "@/models/Post";
+import PostCard from "@/components/posts/PostCard";
+import PostComposer from "@/components/posts/PostComposer";
 type Props = {
   params: Promise<{
     slug: string;
@@ -46,7 +48,29 @@ export default async function CommunityDetailPage({ params }: Props) {
       isMember = Boolean(membership);
     }
   }
+  const posts = await Post.find({
+    community: community._id,
+    status: "PUBLISHED",
+  })
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .populate("author", "name")
+    .lean();
 
+  const formattedPosts = posts.map((post) => {
+    const author = post.author as unknown as {
+      name?: string;
+    } | null;
+
+    return {
+      id: post._id.toString(),
+      title: post.title,
+      excerpt: post.excerpt,
+      authorName: author?.name ?? "Unknown user",
+      topics: post.topics,
+      createdAt: post.createdAt.toISOString(),
+    };
+  });
   return (
     <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
       <Link
@@ -80,6 +104,37 @@ export default async function CommunityDetailPage({ params }: Props) {
         initialIsMember={isMember}
         isLoggedIn={Boolean(session?.user)}
       />
+      {isMember && <PostComposer communitySlug={slug} />}
+      <div className="mt-16">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-white">Community Posts</h2>
+
+          <span className="text-sm text-slate-400">Latest discussions</span>
+        </div>
+
+        {formattedPosts.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-10 text-center">
+            <h3 className="text-lg font-semibold text-white">No posts yet</h3>
+
+            <p className="mt-2 text-sm text-slate-400">
+              Be the first to share something with this community.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-5 md:grid-cols-2">
+            {formattedPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                title={post.title}
+                excerpt={post.excerpt}
+                authorName={post.authorName}
+                topics={post.topics}
+                createdAt={post.createdAt}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
