@@ -64,6 +64,7 @@ export default async function CommunityDetailPage({ params }: Props) {
 
     return {
       id: post._id.toString(),
+      slug: post.slug,
       title: post.title,
       excerpt: post.excerpt,
       authorName: author?.name ?? "Unknown user",
@@ -125,6 +126,7 @@ export default async function CommunityDetailPage({ params }: Props) {
             {formattedPosts.map((post) => (
               <PostCard
                 key={post.id}
+                slug={post.slug}
                 title={post.title}
                 excerpt={post.excerpt}
                 authorName={post.authorName}

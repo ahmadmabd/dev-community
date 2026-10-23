@@ -1,4 +1,6 @@
+import Link from "next/link";
 type PostCardProps = {
+  slug: string;
   title: string;
   excerpt: string;
   authorName: string;
@@ -7,6 +9,7 @@ type PostCardProps = {
 };
 
 export default function PostCard({
+  slug,
   title,
   excerpt,
   authorName,
@@ -27,7 +30,11 @@ export default function PostCard({
         </time>
       </div>
 
-      <h3 className="mt-4 text-xl font-semibold text-white">{title}</h3>
+      <Link href={`/posts/${slug}`}>
+        <h3 className="text-2xl font-bold text-white transition-colors hover:text-purple-400">
+          {title}
+        </h3>
+      </Link>
 
       <p className="mt-3 text-sm leading-7 text-slate-400">{excerpt}</p>
 
